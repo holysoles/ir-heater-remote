@@ -49,6 +49,7 @@ void setup() {
 }
 
 void loop() {
+  Serial.println("beginning");
   delay(1000);
 //Take temp measurements
   float h = dht.readHumidity();
@@ -80,12 +81,13 @@ void loop() {
     }
   }
 
-  delay(1000);
-  sleepytime();
+  delay(100);
+  //sleepytime();
 }
 
 void sleepytime(){
   int loops = (sleepmins*60)/9;
+  loops = 2;
   digitalWrite(LED_BUILTIN, LOW); // Show we're asleep
   for (int s = 0; s < loops; s++){
     int sleepMS = Watchdog.sleep();
@@ -97,6 +99,7 @@ void sleepytime(){
 }
 
 void btexecute(){
+  //Time to read the command string!
   int btnum;
   char commandchar;
   String btnumstr = "";
@@ -110,15 +113,11 @@ void btexecute(){
       btnumstr.concat(num2);
       btnum = btnumstr.toInt();
     
-    //Sends termination command for rpi to exit loop
-    mySerial.println("executed");
-    
     //Now executes received command
     if (commandchar == 't'){
       if (btnum > 12){
-        mySerial.println("invalid timer length");
+        mySerial.println("invalid");
       }
-      mySerial.print("setting timer for: ");
       mySerial.println(btnum);
       for (btnum; btnum > 0; btnum--){
         IRCommands("timer");
@@ -126,32 +125,48 @@ void btexecute(){
     }
     if (commandchar == 'd'){
       if (btnum < 59 || btnum > 80){
-        mySerial.println("invalid temperature");
+        mySerial.println("invalid");
       }
-      mySerial.print("changed temp to: ");
       mySerial.println(btnum);
       controltemp = btnum;
+      changetemp();
     }
     if (commandchar == 'n'){
-      mySerial.println("changed to pm temp");
+      mySerial.println("pm temp");
       controltemp = nighttemp;
+      changetemp();
     }
     if (commandchar == 'm'){
-      mySerial.println("changed to am temp");
+      mySerial.println("am temp");
       controltemp = daytemp;
+      changetemp();
     }
     if (commandchar == 'p'){
-      mySerial.println("preheating");
       IRCommands("power");
       IRCommands("high");
       int highmins = 10;
+      mySerial.println("preheating");
       delay(60000*highmins);
       IRCommands("low");
+    }
+    if (commandchar == 'o'){
+      IRCommands("power");
+      heaterstatus = true;
+      mySerial.println("on");
+    }
+    if (commandchar == 'f'){
+      IRCommands("power");
+      heaterstatus = false;
+      mySerial.println("off");
     }
   }
 }
 
 void changetemp(){
+  if(heaterstatus == false){
+    IRCommands("power");
+    heaterstatus = true;
+  }
   while(heaterset != controltemp){
     if (heaterset < controltemp){
       IRCommands("tempup");
