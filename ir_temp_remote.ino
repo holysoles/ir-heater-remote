@@ -1,7 +1,7 @@
 //DHT LIB
 #include "DHT.h"
 #define DHTPIN 10
-#define DHTTYPE DHT11   // DHT 11
+#define DHTTYPE DHT22   // DHT 11
 DHT dht(DHTPIN, DHTTYPE);
 
 //IR Commands
@@ -55,6 +55,9 @@ void loop() {
   float h = dht.readHumidity();
   float f = dht.readTemperature(true);
   float hif = dht.computeHeatIndex(f, h);
+  Serial.println(h);
+  Serial.println(f);
+  Serial.print(hif);
   delay(500);
 //Check for commands over serial port from bluetooth comm.
  char header;
